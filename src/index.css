@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@font-face {
+    font-family: Imported;
+    /* src: url(./fonts/Roboto-Regular.ttf); */
+    src: url(./fonts/DMSans_18pt-Regular.ttf);
+  }
+
+  :root {
+    font-family: Imported !important;
+    --primary-color: #114c21;
+    --secondary-color: #f1e845;
+    --text-color: #333333;
+    --btn-color: #91c04e;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+/* styles.css */
+/* Default scrollbar styles */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+/* Hide scrollbar when not in use */
+::-webkit-scrollbar-thumb:vertical {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Show scrollbar when in use */
+::-webkit-scrollbar-thumb:hover:vertical {
+  opacity: 1;
+}
+
+/* Adjust scrollbar appearance for mobile */
+@media only screen and (max-width: 767px) {
+  ::-webkit-scrollbar {
+    width: 0;
+  }
+}

@@ -1,0 +1,110 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createContext, useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import ScrollToTop from "../utils/ScrollToTop";
+import { isTokenExpired } from "../utils/session";
+import { Outlet } from "react-router-dom";
+import GetDataService from "../utils/getData";
+import { supabase } from "../constants/supabase";
+import { useQuery } from "react-query";
+
+export const UserData = createContext<any>(null);
+
+function UserDataContext() {
+  const token = Cookies.get("tinapay_jwt");
+
+  let user: any = null;
+  const [recentTrans, setRecentTrans] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+  const [walletBal, setWalletBal] = useState(null);
+
+  const [walData, setWalData] = useState(null);
+
+  const [rate, setRate] = useState(null);
+
+  try {
+    const storedItem = JSON.parse(localStorage.getItem("tinapay_user") || "{}");
+
+    if (
+      token &&
+      isTokenExpired(token) === false &&
+      storedItem &&
+      storedItem.expiration > new Date().getTime()
+    ) {
+      user = storedItem.value;
+    } else {
+      localStorage.removeItem("tinapay_user");
+      Cookies.remove("tinapay_jwt");
+    }
+  } catch (error) {
+    // Handle JSON parsing error
+    user = null;
+    localStorage.removeItem("tinapay_user");
+    Cookies.remove("tinapay_jwt");
+    console.error("Error parsing JSON from localStorage:", error);
+  }
+
+  const getRecentTrans = async () => {
+    const res = await GetDataService.getTransactions(user?.id, 5, false);
+
+    const info = await GetDataService.getUserInfo(user?.id);
+
+    const bal = await GetDataService.getWalletBalance(user?.id);
+
+    const walD = await GetDataService.getWalletAddress(user.id);
+
+    const rate = await GetDataService.getRates();
+
+    if (res) {
+      setRecentTrans(res);
+    }
+
+    if (info) {
+      setUserInfo(info[0]);
+    }
+
+    if (bal) {
+      setWalletBal(bal[0]);
+    }
+
+    if (walD) {
+      setWalData(walD[0]);
+    }
+
+    if (rate) {
+      setRate(rate[0]);
+    }
+  };
+
+  const { data: infoData, error } = useQuery(
+    ["getUserInfo"],
+    async () =>
+      await supabase.from("user_info").select("*").eq("user_id_fk", user?.id)
+  );
+
+  setUserInfo(infoData?.data[0]);
+
+  useEffect(() => {
+    getRecentTrans();
+  }, []);
+
+  return (
+    <UserData.Provider
+      value={{
+        user,
+        recentTrans,
+        userInfo,
+        walletBal,
+        walData,
+        token,
+        rate,
+      }}
+    >
+      <ScrollToTop />
+      <Outlet />
+    </UserData.Provider>
+  );
+}
+
+export default UserDataContext;
